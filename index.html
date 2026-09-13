@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#160812">
+<title>Berry Haven · Maintenance</title>
+<style>
+:root{
+  --bg:#0f060c;
+  --bg2:#1b0a14;
+  --panel:#24101b;
+  --panel2:#321326;
+  --berry:#ff77a8;
+  --berry2:#ff9cbc;
+  --plum:#7c2f62;
+  --cream:#fff8fb;
+  --muted:#d7bdca;
+  --line:rgba(255,255,255,.11);
+  --soft:rgba(255,255,255,.055);
+  --shadow:0 30px 80px rgba(0,0,0,.46);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--cream);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{min-height:100svh;overflow-x:hidden}
+button{font:inherit}
+button:focus-visible{outline:3px solid rgba(255,156,188,.55);outline-offset:3px}
+
+.scene{
+  min-height:100svh;
+  position:relative;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  padding:max(24px,env(safe-area-inset-top)) 16px max(30px,env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 15% 12%,rgba(255,94,154,.16),transparent 26%),
+    radial-gradient(circle at 86% 17%,rgba(139,77,184,.15),transparent 25%),
+    linear-gradient(180deg,#0e050b,#190a13 55%,#10060c);
+}
+.scene::before{
+  content:"";
+  position:fixed;
+  inset:-15%;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 18% 26%,rgba(255,255,255,.9) 0 1px,transparent 1.5px),
+    radial-gradient(circle at 72% 22%,rgba(255,220,235,.75) 0 1px,transparent 1.6px),
+    radial-gradient(circle at 42% 68%,rgba(255,171,207,.55) 0 1px,transparent 1.6px),
+    radial-gradient(circle at 81% 77%,rgba(255,255,255,.55) 0 1px,transparent 1.4px);
+  background-size:145px 145px,190px 190px,170px 170px,210px 210px;
+  opacity:.35;
+  animation:stars 34s linear infinite;
+}
+.scene::after{
+  content:"";
+  position:fixed;
+  left:-18%;
+  right:-18%;
+  bottom:-34vh;
+  height:70vh;
+  pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(255,83,145,.19),transparent 67%);
+  animation:ambient 8s ease-in-out infinite;
+}
+.shell{width:min(100%,760px);position:relative;z-index:1}
+.brand{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-bottom:16px;
+  color:#f8dce7;font-size:12px;font-weight:900;letter-spacing:.17em;text-transform:uppercase
+}
+.brand-icon{
+  width:32px;height:32px;border-radius:13px;display:grid;place-items:center;font-size:18px;
+  background:linear-gradient(145deg,#ff9abb,#cf557f);
+  box-shadow:0 9px 24px rgba(207,85,127,.25),inset 0 1px rgba(255,255,255,.38)
+}
+.card{
+  border-radius:34px;
+  border:1px solid var(--line);
+  background:
+    radial-gradient(circle at 88% 0,rgba(255,255,255,.06),transparent 25%),
+    linear-gradient(160deg,rgba(49,18,36,.97),rgba(21,8,16,.98));
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.hero{padding:32px clamp(20px,6vw,48px) 24px;text-align:center}
+.logo{
+  width:112px;height:112px;margin:0 auto 20px;position:relative;display:grid;place-items:center
+}
+.orbit{
+  position:absolute;inset:0;border-radius:50%;
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 0 40px rgba(255,96,154,.16),inset 0 0 24px rgba(255,96,154,.07);
+  animation:spin 18s linear infinite
+}
+.orbit::before,.orbit::after{
+  content:"✦";position:absolute;color:#ffd9e7;text-shadow:0 0 14px #ff6fa1;font-size:13px
+}
+.orbit::before{top:7px;left:20px}.orbit::after{right:8px;bottom:22px}
+.berry{
+  width:78px;height:78px;border-radius:27px;display:grid;place-items:center;font-size:52px;
+  background:linear-gradient(145deg,#3c142b,#190b14);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 17px 34px rgba(0,0,0,.30),0 0 30px rgba(255,87,148,.16);
+  animation:bob 3.4s ease-in-out infinite
+}
+.status{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:8px 13px;border-radius:999px;margin-bottom:13px;
+  background:rgba(255,118,164,.09);border:1px solid rgba(255,150,186,.18);
+  color:#ffd5e4;font-size:10px;font-weight:950;letter-spacing:.10em;text-transform:uppercase
+}
+.status::before{
+  content:"";width:8px;height:8px;border-radius:50%;background:#ff79a6;
+  box-shadow:0 0 0 5px rgba(255,121,166,.10),0 0 17px rgba(255,121,166,.50);
+  animation:pulse 1.7s ease-in-out infinite
+}
+h1{
+  margin:0;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(35px,8vw,59px);line-height:1.01;letter-spacing:-.045em
+}
+h1 em{font-style:normal;color:#ff9fbd}
+.lead{
+  width:min(100%,575px);margin:16px auto 0;color:var(--muted);
+  font-size:clamp(14px,3.2vw,17px);line-height:1.62
+}
+.release-chip{
+  display:inline-flex;align-items:center;gap:7px;margin-top:18px;padding:8px 12px;border-radius:12px;
+  background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.075);
+  color:#e7cbd7;font-size:11px;font-weight:850
+}
+.info{
+  margin:0 20px 20px;
+  border-radius:24px;border:1px solid rgba(255,255,255,.075);
+  background:rgba(8,3,7,.30);
+  overflow:hidden
+}
+.info-copy{padding:18px 18px 4px}
+.info-copy strong{font-size:14px}
+.info-copy p{margin:7px 0 0;color:#cbb2bf;font-size:12px;line-height:1.55}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 18px 18px}
+.step{
+  min-height:64px;padding:11px;border-radius:15px;
+  border:1px solid rgba(255,255,255,.065);background:rgba(255,255,255,.035);
+  position:relative;overflow:hidden
+}
+.step small{display:block;color:#ae919f;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.step b{display:block;margin-top:5px;font-size:11px;line-height:1.25}
+.step.done::after,.step.active::after{
+  content:"";height:2px;position:absolute;bottom:0;left:0;border-radius:999px
+}
+.step.done::after{width:100%;background:#8ed8a6}
+.step.active::after{width:66%;background:linear-gradient(90deg,#ff76a4,#c95eaa);animation:load 2s ease-in-out infinite alternate}
+.actions{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 22px
+}
+.btn{
+  min-height:48px;border:0;border-radius:16px;cursor:pointer;font-weight:900;font-size:12px;
+  transition:transform .16s ease,opacity .16s ease,box-shadow .16s ease
+}
+.btn:active{transform:scale(.98)}
+.btn.primary{
+  color:#fff;background:linear-gradient(145deg,#ff8fb1,#cc537d);
+  box-shadow:0 12px 26px rgba(204,83,125,.22)
+}
+.btn.secondary{
+  color:#ffeaf2;background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.10)
+}
+.footer{
+  display:flex;justify-content:center;gap:18px;flex-wrap:wrap;
+  padding:0 20px 24px;color:#a98e9b;font-size:10px
+}
+.footer span{display:inline-flex;align-items:center;gap:5px}
+.footer i{font-style:normal;color:#ff8eb2}
+
+/* Update log modal */
+.modal{
+  position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;justify-content:center;
+  padding:14px;background:rgba(6,2,5,.76)
+}
+.modal.open{display:flex}
+.modal-card{
+  width:min(100%,720px);max-height:min(82svh,760px);
+  display:grid;grid-template-rows:auto minmax(0,1fr);
+  border-radius:28px 28px 22px 22px;overflow:hidden;
+  background:linear-gradient(180deg,#2b1021,#140810);
+  border:1px solid rgba(255,255,255,.11);
+  box-shadow:0 30px 90px rgba(0,0,0,.65)
+}
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.08)
+}
+.modal-head div{min-width:0}
+.modal-head small{display:block;color:#c29aaa;font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.11em}
+.modal-head h2{margin:4px 0 0;font-family:Georgia,"Times New Roman",serif;font-size:26px}
+.close{
+  flex:0 0 auto;width:42px;height:42px;border:1px solid rgba(255,255,255,.09);
+  border-radius:14px;background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-size:20px
+}
+.log-body{overflow:auto;padding:18px 18px 24px;overscroll-behavior:contain}
+.log-body h1,.log-body h2,.log-body h3{
+  font-family:Georgia,"Times New Roman",serif;letter-spacing:-.02em;text-align:left
+}
+.log-body h1{font-size:28px;margin:0 0 8px}
+.log-body h2{font-size:20px;color:#ff9fbd;margin:22px 0 8px}
+.log-body h3{font-size:16px;margin:17px 0 7px}
+.log-body p{margin:8px 0;color:#dcc7d1;font-size:13px;line-height:1.6}
+.log-body ul{margin:8px 0 12px;padding-left:20px;color:#dcc7d1}
+.log-body li{margin:7px 0;font-size:13px;line-height:1.5}
+.log-body .meta{
+  display:inline-flex;padding:6px 9px;border-radius:10px;margin:2px 0 10px;
+  background:rgba(255,255,255,.05);color:#d9b8c6;font-size:10px;font-weight:850
+}
+.log-error{
+  padding:14px;border-radius:16px;background:rgba(255,116,151,.08);
+  border:1px solid rgba(255,116,151,.17);color:#ffd9e5;font-size:12px;line-height:1.5
+}
+
+@keyframes stars{to{background-position:145px -145px,-190px 190px,170px -170px,-210px 210px}}
+@keyframes ambient{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:.88;transform:scale(1.08)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes bob{0%,100%{transform:translateY(2px) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes load{from{width:35%}to{width:82%}}
+
+@media(max-width:560px){
+  .scene{place-items:start center}
+  .card{border-radius:29px}
+  .hero{padding:26px 18px 21px}
+  .logo{width:100px;height:100px}.berry{width:70px;height:70px;font-size:48px}
+  .steps{grid-template-columns:1fr}
+  .actions{grid-template-columns:1fr}
+  .modal{padding:0;align-items:flex-end}
+  .modal-card{max-height:88svh;border-radius:26px 26px 0 0}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div class="shell">
+    <div class="brand"><span class="brand-icon">🍓</span> Berry Haven</div>
+
+    <section class="card" aria-labelledby="maintenanceTitle">
+      <div class="hero">
+        <div class="logo" aria-hidden="true">
+          <div class="orbit"></div>
+          <div class="berry">🍓</div>
+        </div>
+
+        <div class="status">Maintenance in progress</div>
+        <h1 id="maintenanceTitle">Berry Haven is getting<br><em>freshly picked.</em></h1>
+
+        <!-- =========================================================
+             GITHUB EDITABLE STATUS TEXT START
+             You can safely edit the paragraph below in GitHub.
+             GITHUB EDITABLE STATUS TEXT END
+             ========================================================= -->
+        <p class="lead">
+          We’re installing the latest Berry Haven update and running final checks before reopening.
+          Your account and local Berry Haven data are not affected by this maintenance page.
+        </p>
+
+        <div class="release-chip">🍓 Current update · Beta Release 1.0</div>
+      </div>
+
+      <div class="info">
+        <div class="info-copy">
+          <strong>What’s happening?</strong>
+          <p>
+            The main app is temporarily offline while the new build is deployed and checked.
+            You can open the update log below to see exactly what is changing.
+          </p>
+        </div>
+
+        <div class="steps" aria-label="Maintenance progress">
+          <div class="step done"><small>Stage 1</small><b>Update prepared ✓</b></div>
+          <div class="step active"><small>Stage 2</small><b>Deploying & checking</b></div>
+          <div class="step"><small>Stage 3</small><b>Reopen Berry Haven</b></div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" type="button" onclick="location.reload()">Try Berry Haven</button>
+        <button class="btn secondary" type="button" id="openLogBtn">View update log</button>
+      </div>
+
+      <div class="footer" aria-label="Berry Haven values">
+        <span><i>🔒</i> Private</span>
+        <span><i>♡</i> Secure</span>
+        <span><i>🍓</i> Together</span>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="modal" id="updateLogModal" role="dialog" aria-modal="true" aria-labelledby="updateLogTitle">
+  <section class="modal-card">
+    <header class="modal-head">
+      <div>
+        <small>Berry Haven</small>
+        <h2 id="updateLogTitle">Update log</h2>
+      </div>
+      <button class="close" type="button" id="closeLogBtn" aria-label="Close update log">×</button>
+    </header>
+
+    <div class="log-body" id="updateLogBody">
+      <p>Loading the latest update log…</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const modal = document.getElementById('updateLogModal');
+  const body = document.getElementById('updateLogBody');
+  const openBtn = document.getElementById('openLogBtn');
+  const closeBtn = document.getElementById('closeLogBtn');
+
+  const escapeHTML = value => String(value)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+
+  function renderSimpleMarkdown(source){
+    const lines = String(source || '').replace(/\r/g,'').split('\n');
+    let html = '';
+    let inList = false;
+
+    const closeList = () => {
+      if(inList){ html += '</ul>'; inList = false; }
+    };
+
+    for(const raw of lines){
+      const line = raw.trim();
+
+      if(!line){
+        closeList();
+        continue;
+      }
+
+      if(line.startsWith('### ')){
+        closeList();
+        html += `<h3>${escapeHTML(line.slice(4))}</h3>`;
+      } else if(line.startsWith('## ')){
+        closeList();
+        html += `<h2>${escapeHTML(line.slice(3))}</h2>`;
+      } else if(line.startsWith('# ')){
+        closeList();
+        html += `<h1>${escapeHTML(line.slice(2))}</h1>`;
+      } else if(line.startsWith('META:')){
+        closeList();
+        html += `<div class="meta">${escapeHTML(line.slice(5).trim())}</div>`;
+      } else if(line.startsWith('- ')){
+        if(!inList){ html += '<ul>'; inList = true; }
+        html += `<li>${escapeHTML(line.slice(2))}</li>`;
+      } else {
+        closeList();
+        html += `<p>${escapeHTML(line)}</p>`;
+      }
+    }
+
+    closeList();
+    return html || '<p>No update log has been added yet.</p>';
+  }
+
+  async function loadUpdateLog(){
+    body.innerHTML = '<p>Loading the latest update log…</p>';
+
+    try{
+      const response = await fetch(`maintenance-update-log.txt?v=${Date.now()}`, { cache:'no-store' });
+      if(!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
+      body.innerHTML = renderSimpleMarkdown(text);
+    }catch(error){
+      body.innerHTML = `
+        <div class="log-error">
+          The update log could not be loaded. Make sure <strong>maintenance-update-log.txt</strong>
+          is uploaded beside this maintenance page in your GitHub repository.
+        </div>`;
+    }
+  }
+
+  async function openModal(){
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    await loadUpdateLog();
+    closeBtn.focus();
+  }
+
+  function closeModal(){
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    openBtn.focus();
+  }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+
+  modal.addEventListener('click', e => {
+    if(e.target === modal) closeModal();
+  });
+
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  });
+})();
+</script>
+</body>
+</html>
