@@ -1,0 +1,6 @@
+/* Berry Haven Beta 1.0 - UI finishing layer */
+.page .card,.page .panel,.gamepane.polished-game{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+#app:not(.safe) .page .card,#app:not(.safe) .gamepane.polished-game{background:linear-gradient(145deg,rgba(255,250,253,.94),rgba(255,246,250,.9));box-shadow:0 14px 40px rgba(63,21,45,.10)}
+.game-mode-banner{overflow:hidden;position:relative}
+.game-mode-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.2) 48%,transparent 61%);transform:translateX(-100%);animation:bhGameBannerSheen 8s ease-in-out infinite;pointer-events:none}
+@keyframes bhGameBannerSheen{0%,65%{transform:translateX(-110%)}85%,100%{transform:translateX(110%)}}

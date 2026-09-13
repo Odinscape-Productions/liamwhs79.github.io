@@ -1,0 +1,16 @@
+BERRY HAVEN — BETA RELEASE 1.0
+
+Upload/replace ALL files in this package at the ROOT of your GitHub Pages repository, beside index.html.
+Do not upload the ZIP itself.
+
+IMPORTANT
+1. Replace index.html and berryhaven-sw.js.
+2. Upload all .css and .js files in this package to the same root level.
+3. Wait for GitHub Pages to deploy.
+4. Fully close the installed Berry Haven web app.
+5. Open the website in Chrome once and refresh so the Beta 1.0 service worker takes control.
+6. Reopen the installed app.
+
+The package is deliberately flat: no asset folders are required.
+
+Phaser 3.90.0 and MQTT are fetched from jsDelivr on the first online load and cached by the service worker when successful. Existing classic games remain as a fallback if Phaser cannot load.

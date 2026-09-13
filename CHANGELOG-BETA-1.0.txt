@@ -1,0 +1,43 @@
+BERRY HAVEN — BETA RELEASE 1.0
+Build: beta-1.0-phaser-css-themes
+
+MAJOR RELEASE CHANGES
+
+• Berry Arcade rebuilt around Phaser 3 for canvas/WebGL game presentation.
+• Berry Pairs rebuilt with animated card flips, matching effects, timer and rewards.
+• Word Garden rebuilt as a Phaser letter-garden game with animated progress.
+• Berry Four rebuilt with animated falling counters, bounce effects and computer opponent.
+• Four Together now uses the same animated Connect Four presentation for paired play.
+• Berry Noughts, Berry RPS, Glowberry Rescue, Secret Signal and Berry Trails now render through the shared Phaser multiplayer scene.
+• Colour Studio rebuilt as an interactive Phaser drawing canvas with palette, clear and finish flow.
+• Strawberry Farm rebuilt as a top-down Phaser farm view while preserving existing persistent farm state and actions.
+• Game screens now use their HD Berry Haven game artwork as stage backgrounds so the games visually match their icons.
+
+THEMES / UI
+
+• Theme animation moved out of per-frame JavaScript and into a CSS-first theme engine.
+• The selected HD theme preview artwork is now the actual wallpaper source.
+• Animated environmental layers include slow camera movement, lighting, caustics, cloud banks, starfields, fireflies/bokeh, neon perspective grids and velvet sweeps depending on theme.
+• Separate CSS files now isolate base stability, UI, themes, games and Safe Space presentation.
+• Backdrop-filter-heavy rendering was removed from core cards/panels to reduce Samsung/Chromium compositing glitches.
+• Berry Safe Space remains visually and logically separated from adult content.
+
+ASSETS / PROFILES / FEELINGS
+
+• Existing HD BerryMojis, adult BerryMojis, unique profile art, animated profile effects, feelings art, icons and game artwork are preserved in the Beta build.
+• Adult artwork remains in its own JavaScript asset library.
+
+ARCHITECTURE
+
+• New files: berry-base.css, berry-ui.css, berry-themes.css, berry-games.css, berry-safe-space.css, berry-theme-controller.js and berry-arcade.js.
+• Service worker cache bumped to berryhaven-beta-1-0 and updated for the Beta asset set.
+• Phaser 3.90.0 and MQTT currently load from jsDelivr on first online load; the service worker runtime-caches successful responses.
+• If Phaser is unavailable, Berry Haven falls back to the existing classic DOM games rather than breaking the Play section.
+
+VALIDATION
+
+• JavaScript syntax checked with Node.
+• Main inline application script syntax checked.
+• Duplicate HTML IDs checked: none found.
+• Local CSS/JS references checked: none missing.
+• Headless Chromium did not complete reliably in this container, so this remains a Beta build and needs real-device visual testing, especially paired two-phone games.
