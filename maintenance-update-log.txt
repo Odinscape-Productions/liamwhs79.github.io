@@ -1,0 +1,28 @@
+# Berry Haven Beta Release 1.0
+META: Latest update log
+
+## What’s new
+- Berry Arcade has been reworked around a proper HTML5 game engine.
+- Games have improved animation, effects, touch controls and presentation.
+- Animated themes have moved to a CSS-driven system for better stability.
+- HD BerryMojis, profile artwork and feelings artwork remain part of the new visual system.
+- Two-player games continue to use Berry Haven pairing for shared moves and game state.
+
+## Games
+- Berry Pairs
+- Word Garden
+- Berry Four
+- Colour Studio
+- Strawberry Farm
+- Berry Noughts
+- Four Together
+- Berry RPS
+- Glowberry Rescue
+- Secret Signal
+- Berry Trails
+
+## Maintenance note
+This file is intentionally easy to edit directly in GitHub.
+
+Replace anything in maintenance-update-log.txt with your newest update notes.
+The maintenance page will load the file automatically when someone taps “View update log”.
