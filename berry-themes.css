@@ -1,0 +1,49 @@
+/* Berry Haven Beta 1.0 - CSS-driven wallpaper engine */
+#themeWallpaper{--bh-wallpaper:none;--bh-tint-a:#7a2148;--bh-tint-b:#190b18;--bh-fx:#ffd6e5;background:#160b15}
+#themeWallpaper .bh-theme-css-scene{position:absolute;inset:-5%;overflow:hidden;background:#160b15;will-change:auto}
+#themeWallpaper .bh-theme-wallpaper-base{position:absolute;inset:-3%;background-image:linear-gradient(180deg,rgba(17,7,14,.08),rgba(17,7,14,.24)),var(--bh-wallpaper);background-size:cover;background-position:center;transform:scale(1.04);animation:bhWallpaperDrift 44s ease-in-out infinite alternate;backface-visibility:hidden;will-change:transform}
+#themeWallpaper .bh-theme-depth,#themeWallpaper .bh-theme-light,#themeWallpaper .bh-theme-atmos{position:absolute;inset:-10%;will-change:transform,opacity;background-repeat:repeat;mix-blend-mode:screen}
+#themeWallpaper .bh-theme-depth{background:radial-gradient(circle at 18% 24%,color-mix(in srgb,var(--bh-fx) 30%,transparent) 0 1.5px,transparent 2px),radial-gradient(circle at 72% 68%,rgba(255,255,255,.18) 0 1px,transparent 2px);background-size:96px 96px,140px 140px;opacity:.46;animation:bhDepth 34s linear infinite}
+#themeWallpaper .bh-theme-light{background:linear-gradient(108deg,transparent 20%,rgba(255,255,255,.08) 42%,rgba(255,255,255,.19) 49%,rgba(255,255,255,.06) 57%,transparent 78%);opacity:.56;transform:translateX(-35%);animation:bhLightSweep 18s ease-in-out infinite}
+#themeWallpaper .bh-theme-atmos{opacity:.48;background:radial-gradient(ellipse at 20% 20%,color-mix(in srgb,var(--bh-tint-a) 45%,transparent),transparent 42%),radial-gradient(ellipse at 80% 75%,color-mix(in srgb,var(--bh-tint-b) 45%,transparent),transparent 48%);animation:bhAtmos 22s ease-in-out infinite alternate}
+#themeWallpaper[data-space="little"] .bh-theme-wallpaper-base{filter:saturate(.92) brightness(1.08)}
+#themeWallpaper[data-space="little"] .bh-theme-atmos{opacity:.34}
+
+/* Theme-specific environmental movement. These animate layers, not DOM layout. */
+#themeWallpaper.theme-honey-bear{--bh-tint-a:#e2a348;--bh-tint-b:#61391f;--bh-fx:#ffd97a}
+#themeWallpaper.theme-honey-bear .bh-theme-light{background:linear-gradient(104deg,transparent 15%,rgba(255,211,112,.04) 36%,rgba(255,227,156,.24) 48%,rgba(255,185,63,.08) 58%,transparent 80%);animation-duration:14s}
+#themeWallpaper.theme-honey-bear .bh-theme-depth{background:radial-gradient(circle,rgba(255,223,120,.46) 0 1.8px,transparent 2.4px);background-size:120px 120px;animation:bhHoneyDust 31s linear infinite}
+
+#themeWallpaper.theme-medical-hearts{--bh-tint-a:#3f91a9;--bh-tint-b:#163a62;--bh-fx:#aff7ff}
+#themeWallpaper.theme-medical-hearts .bh-theme-light{background:repeating-radial-gradient(ellipse at 50% -10%,rgba(170,246,255,.18) 0 2%,transparent 3% 9%);transform:scale(1.35);animation:bhCaustics 9s ease-in-out infinite alternate;opacity:.7}
+#themeWallpaper.theme-medical-hearts .bh-theme-depth{background:radial-gradient(circle,rgba(195,250,255,.42) 0 1.5px,transparent 2.5px);background-size:86px 86px;animation:bhBubbles 28s linear infinite}
+
+#themeWallpaper.theme-mooncloud,#themeWallpaper.theme-bunny-contrast{--bh-tint-a:#7768bf;--bh-tint-b:#171431;--bh-fx:#d8d2ff}
+#themeWallpaper.theme-mooncloud .bh-theme-atmos,#themeWallpaper.theme-bunny-contrast .bh-theme-atmos{background:radial-gradient(ellipse at 40% 75%,rgba(229,226,255,.15),transparent 34%),radial-gradient(ellipse at 80% 40%,rgba(181,174,255,.18),transparent 38%);filter:blur(18px);animation:bhCloudBank 26s ease-in-out infinite alternate}
+
+#themeWallpaper.theme-enchanted-garden,#themeWallpaper.theme-berry-classic,#themeWallpaper.theme-peach-blush{--bh-tint-a:#b54372;--bh-tint-b:#3a1d34;--bh-fx:#ffd0df}
+#themeWallpaper.theme-enchanted-garden .bh-theme-depth{background:radial-gradient(circle at center,rgba(255,235,181,.65) 0 1px,transparent 3px),radial-gradient(circle at center,rgba(255,189,219,.35) 0 1.6px,transparent 3.2px);background-size:110px 110px,160px 160px;animation:bhFireflies 24s linear infinite}
+
+#themeWallpaper.theme-midnight-arcade{--bh-tint-a:#7b34bc;--bh-tint-b:#0b1730;--bh-fx:#65d7ff}
+#themeWallpaper.theme-midnight-arcade .bh-theme-depth{inset:45% -30% -35%;background:linear-gradient(rgba(72,217,255,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(237,69,255,.22) 1px,transparent 1px);background-size:48px 48px;transform:perspective(260px) rotateX(61deg) scale(1.35);transform-origin:center bottom;animation:bhGrid 7s linear infinite;opacity:.52}
+#themeWallpaper.theme-midnight-arcade .bh-theme-light{background:linear-gradient(90deg,transparent,rgba(231,73,255,.2),transparent 36%,rgba(75,218,255,.2),transparent);animation-duration:8s}
+
+#themeWallpaper.theme-cherry-velvet{--bh-tint-a:#9b234a;--bh-tint-b:#260a17;--bh-fx:#ff9eba}
+#themeWallpaper.theme-cherry-velvet .bh-theme-light{background:linear-gradient(112deg,transparent 20%,rgba(255,255,255,.02) 38%,rgba(255,197,216,.16) 49%,rgba(255,255,255,.03) 61%,transparent 78%);animation:bhVelvet 20s ease-in-out infinite}
+
+#themeWallpaper.theme-lavender-milk{--bh-tint-a:#aa8ad1;--bh-tint-b:#4a315e;--bh-fx:#f4eaff}
+#themeWallpaper.theme-sparkle-berry,#themeWallpaper.theme-blueberry-fizz{--bh-tint-a:#7547aa;--bh-tint-b:#15152e;--bh-fx:#d2c8ff}
+#themeWallpaper.theme-sparkle-berry .bh-theme-depth,#themeWallpaper.theme-blueberry-fizz .bh-theme-depth{background:radial-gradient(circle,rgba(255,255,255,.82) 0 1px,transparent 1.8px),radial-gradient(circle,rgba(218,186,255,.58) 0 1.3px,transparent 2px);background-size:84px 84px,139px 139px;animation:bhStars 48s linear infinite}
+
+@keyframes bhWallpaperDrift{0%{transform:scale(1.04) translate3d(-.8%,-.4%,0)}50%{transform:scale(1.09) translate3d(.8%,.4%,0)}100%{transform:scale(1.055) translate3d(-.2%,.9%,0)}}
+@keyframes bhDepth{to{transform:translate3d(-96px,-140px,0)}}
+@keyframes bhLightSweep{0%,18%{transform:translate3d(-48%,0,0);opacity:.2}55%{opacity:.65}82%,100%{transform:translate3d(48%,0,0);opacity:.16}}
+@keyframes bhAtmos{from{transform:scale(1) translate3d(-2%,0,0)}to{transform:scale(1.08) translate3d(2%,-1%,0)}}
+@keyframes bhHoneyDust{to{background-position:75px -240px}}
+@keyframes bhCaustics{from{transform:translate3d(-2%,-1%,0) scale(1.28) rotate(-1deg)}to{transform:translate3d(2%,1%,0) scale(1.42) rotate(1deg)}}
+@keyframes bhBubbles{to{background-position:30px -420px}}
+@keyframes bhCloudBank{from{transform:translate3d(-5%,0,0) scale(1.06)}to{transform:translate3d(7%,-2%,0) scale(1.13)}}
+@keyframes bhFireflies{0%{background-position:0 0,40px 60px;opacity:.25}50%{opacity:.68}100%{background-position:120px -170px,-120px -210px;opacity:.32}}
+@keyframes bhGrid{to{background-position:0 48px,48px 0}}
+@keyframes bhVelvet{0%,15%{transform:translateX(-55%) skewX(-10deg);opacity:.15}55%{opacity:.55}90%,100%{transform:translateX(55%) skewX(-10deg);opacity:.12}}
+@keyframes bhStars{to{background-position:-168px -250px,278px -360px}}

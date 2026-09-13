@@ -1,0 +1,4 @@
+/* Berry Haven Beta 1.0 - safe-space isolation polish */
+#app.safe .berry-arcade-stage{background:linear-gradient(160deg,#fff1f6,#e9dcff);border-color:rgba(168,119,168,.22);box-shadow:0 16px 38px rgba(100,69,120,.13)}
+#app.safe .berry-arcade-stage::after{color:rgba(85,55,91,.55)}
+#app.safe .page{--bh-panel-alpha:.9}
