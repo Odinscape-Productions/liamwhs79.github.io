@@ -27,23 +27,27 @@ async function getAuthorization() {
     throw err;
   }
   const npsso = String(process.env.PSN_NPSSO || "").trim();
-  if (!npsso) {
-    const err = new Error("PSN auto-sync needs the server-side PSN_NPSSO secret in Render.");
-    err.code = "PSN_NOT_CONFIGURED";
-    throw err;
-  }
+  if (!npsso) { const err = new Error("PSN import is not configured on this server yet."); err.code = "PSN_NOT_CONFIGURED"; throw err; }
+  if (npsso.length < 40) { const err = new Error("The configured PSN_NPSSO value does not look valid."); err.code = "PSN_AUTH_FAILED"; throw err; }
   if (cachedAuth?.accessToken && Date.now() < cachedUntil) return cachedAuth;
-
   const { exchangeNpssoForAccessCode, exchangeAccessCodeForAuthTokens } = loadPsnApi();
-  const accessCode = await exchangeNpssoForAccessCode(npsso);
-  cachedAuth = await exchangeAccessCodeForAuthTokens(accessCode);
+  try {
+    const accessCode = await exchangeNpssoForAccessCode(npsso);
+    cachedAuth = await exchangeAccessCodeForAuthTokens(accessCode);
+  } catch (cause) {
+    const err = new Error("PlayStation rejected the server authentication token. Replace PSN_NPSSO in Render.");
+    err.code = "PSN_AUTH_FAILED"; err.cause = cause; throw err;
+  }
   // PSN access tokens are short-lived. Refresh from the server-held NPSSO before expiry.
   cachedUntil = Date.now() + 45 * 60 * 1000;
   return cachedAuth;
 }
 
-function firstSettled(result, fallback = null) {
-  return result?.status === "fulfilled" ? result.value : fallback;
+function firstSettled(result, fallback = null) { return result?.status === "fulfilled" ? result.value : fallback; }
+function withTimeout(promise, ms, label = "PlayStation request") {
+  let timer;
+  const timeout = new Promise((_, reject) => { timer = setTimeout(() => { const err = new Error(`${label} timed out. Try again.`); err.code = "PSN_TIMEOUT"; reject(err); }, ms); });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
 function findSearchIdentity(search, onlineId) {
@@ -123,17 +127,17 @@ async function syncPsnProfile({ onlineId }) {
   const api = loadPsnApi();
   const authorization = await getAuthorization();
   const auth = { accessToken: authorization.accessToken };
-  const identity = await resolveIdentity(auth, onlineId);
+  const identity = await withTimeout(resolveIdentity(auth, onlineId), 12000, "PSN profile lookup");
   const accountId = identity.accountId;
 
   const calls = await Promise.allSettled([
-    api.getProfileFromAccountId(auth, accountId),
-    api.getUserTrophyProfileSummary(auth, accountId),
-    fetchAllTitles(api, auth, accountId),
-    api.getUserPlayedGames(auth, accountId, { limit:200 }),
-    api.getBasicPresence(auth, accountId),
-    api.getUserRegion(auth, identity.onlineId),
-    api.getUserFriendsAccountIds(auth, accountId, { limit:1 })
+    withTimeout(api.getProfileFromAccountId(auth, accountId),12000,"PSN profile"),
+    withTimeout(api.getUserTrophyProfileSummary(auth, accountId),12000,"PSN trophy summary"),
+    withTimeout(fetchAllTitles(api, auth, accountId),15000,"PSN trophy titles"),
+    withTimeout(api.getUserPlayedGames(auth, accountId,{limit:200}),15000,"PSN played games"),
+    withTimeout(api.getBasicPresence(auth, accountId),10000,"PSN presence"),
+    withTimeout(api.getUserRegion(auth, identity.onlineId),10000,"PSN region"),
+    withTimeout(api.getUserFriendsAccountIds(auth, accountId,{limit:1}),10000,"PSN friends")
   ]);
 
   const profile = firstSettled(calls[0], {});

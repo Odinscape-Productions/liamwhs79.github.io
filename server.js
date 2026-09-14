@@ -139,7 +139,23 @@ const registrationSchema=z.object({
 
 app.get("/api/status",(_req,res)=>{
   const db=readDb();
-  res.json({ok:true,demoData:Boolean(db?.meta?.demoData),psnSyncMode:process.env.PSN_SYNC_MODE||"disabled",psnConfigured:Boolean(process.env.PSN_NPSSO),version:"2.0.0"});
+  res.json({
+    ok:true,backend:"node-express",demoData:Boolean(db?.meta?.demoData),
+    psnSyncMode:process.env.PSN_SYNC_MODE||"disabled",
+    psnConfigured:Boolean(String(process.env.PSN_NPSSO||"").trim()),
+    persistence:process.env.DATABASE_URL ? "postgres" : "local-file",
+    version:"3.0.0"
+  });
+});
+
+app.get("/api/diagnostics",(_req,res)=>{
+  res.json({
+    ok:true,backendReachable:true,node:process.version,
+    psnConfigured:Boolean(String(process.env.PSN_NPSSO||"").trim()),
+    psnSyncMode:process.env.PSN_SYNC_MODE||"disabled",
+    persistence:process.env.DATABASE_URL ? "postgres" : "local-file",
+    note:"If you can read this JSON, the PulseStation backend is running."
+  });
 });
 
 app.post("/api/psn/lookup",async(req,res)=>{
@@ -149,30 +165,23 @@ app.post("/api/psn/lookup",async(req,res)=>{
     const psn=await syncPsnProfile({onlineId:parsed.data.onlineId});
     res.json({profile:{onlineId:psn.onlineId,avatarUrl:psn.avatarUrl,profilePicUrl:psn.profilePicUrl,aboutMe:psn.aboutMe,level:psn.trophyLevel,trophies:psn.trophies,plus:psn.plus,presence:psn.presence,games:psn.games.slice(0,6)},privacyNote:"Only data allowed by PlayStation privacy settings is returned."});
   }catch(err){
-    const status=["PSN_SYNC_DISABLED","PSN_NOT_CONFIGURED"].includes(err.code)?503:404;
-    res.status(status).json({error:err.message,code:err.code||"PSN_LOOKUP_FAILED"});
+    const unavailable=["PSN_SYNC_DISABLED","PSN_NOT_CONFIGURED","PSN_AUTH_FAILED","PSN_LIBRARY_MISSING"];
+    const status=unavailable.includes(err.code)?503:(err.code==="PSN_USER_NOT_FOUND"?404:502);
+    res.status(status).json({error:err.message,code:err.code||"PSN_LOOKUP_FAILED",hint:err.code==="PSN_NOT_CONFIGURED"?"Add PSN_NPSSO to the Render web service Environment page.":err.code==="PSN_AUTH_FAILED"?"The server PSN credential is expired or rejected. Replace PSN_NPSSO in Render.":"Check the PSN Online ID and the target account privacy settings."});
   }
 });
 
 app.post("/api/auth/register",async(req,res)=>{
   const parsed=registrationSchema.safeParse(req.body);
-  if(!parsed.success)return res.status(400).json({error:"Use a valid PulseStation username, PSN Online ID and a password of at least 8 characters."});
-  const db=readDb(); const onlineId=parsed.data.psnOnlineId; const username=parsed.data.username;
-  if(db.users.some(u=>u.canLogin!==false && String(u.username||"").toLowerCase()===username.toLowerCase()))
-    return res.status(409).json({error:"That PulseStation username is already taken."});
+  if(!parsed.success)return res.status(400).json({error:"Use a valid PulseStation username, PSN Online ID and a password of at least 8 characters.",details:parsed.error?.issues?.map(i=>({field:i.path?.join(".")||"field",message:i.message}))});
+  const db=readDb();
+  if(!db || !Array.isArray(db.users))return res.status(503).json({error:"Account storage is not ready. Redeploy the Node web service and try again."});
+  const onlineId=parsed.data.psnOnlineId.trim(); const username=parsed.data.username.trim();
+  if(db.users.some(u=>u.canLogin!==false && String(u.username||"").toLowerCase()===username.toLowerCase()))return res.status(409).json({error:"That PulseStation username is already taken."});
   const hasRealAccount=db.users.some(u=>u.canLogin!==false && u.passwordHash);
-  const user={
-    id:randomUUID(),username,passwordHash:await bcrypt.hash(parsed.data.password,12),canLogin:true,
-    handle:onlineId,psnOnlineId:onlineId,displayName:parsed.data.displayName||onlineId,role:hasRealAccount?"member":"owner",
-    bio:"New to PulseStation.",avatar:"nova",theme:"midnight",level:0,platinum:0,gold:0,silver:0,bronze:0,hours:0,
-    psnLinked:false,psnVerified:false,psnSyncStatus:"pending",dataSource:"local",currentGame:null,library:[],createdAt:new Date().toISOString()
-  };
-  db.users.push(user);
-  const synced=await tryPsnSync(db,user,onlineId);
-  addActivity(db,user.id,"profile",`${user.handle} joined PulseStation`);
-  if(synced.ok)addActivity(db,user.id,"sync","Imported PlayStation profile");
-  writeDb(db);
-  res.status(201).json({token:signToken(user),user:ownUser(user),psnImported:synced.ok,psnMessage:synced.ok?"PlayStation profile imported.":synced.error?.message});
+  const user={id:randomUUID(),username,passwordHash:await bcrypt.hash(parsed.data.password,10),canLogin:true,handle:onlineId,psnOnlineId:onlineId,displayName:parsed.data.displayName||onlineId,role:hasRealAccount?"member":"owner",bio:"New to PulseStation.",avatar:"nova",theme:"midnight",level:0,platinum:0,gold:0,silver:0,bronze:0,hours:0,psnLinked:false,psnVerified:false,psnSyncStatus:"not-yet-synced",dataSource:"local",currentGame:null,library:[],createdAt:new Date().toISOString()};
+  db.users.push(user); addActivity(db,user.id,"profile",`${user.handle} joined PulseStation`); writeDb(db);
+  res.status(201).json({token:signToken(user),user:ownUser(user),accountCreated:true,psnImported:false,psnConfigured:Boolean(String(process.env.PSN_NPSSO||"").trim()),psnMessage:"Account created. PSN import runs separately so a PlayStation lookup can never block registration."});
 });
 
 app.post("/api/auth/login",async(req,res)=>{

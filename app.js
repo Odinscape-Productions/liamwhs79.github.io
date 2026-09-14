@@ -43,11 +43,17 @@ function gameCoverValue(game) {
 }
 
 async function api(path, options = {}) {
-  const headers = { "Content-Type":"application/json", ...(options.headers || {}) };
-  if (state.token) headers.Authorization = `Bearer ${state.token}`;
-  const res = await fetch(path, { ...options, headers });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Request failed");
+  const headers={"Content-Type":"application/json",...(options.headers||{})};
+  if(state.token)headers.Authorization=`Bearer ${state.token}`;
+  let res;
+  try{res=await fetch(path,{...options,headers});}catch{throw new Error("PulseStation backend is unreachable. Open the Render app URL, not GitHub Pages.");}
+  const type=res.headers.get("content-type")||"";
+  if(!type.includes("application/json")){
+    if(location.hostname.endsWith("github.io"))throw new Error("This is GitHub Pages. It can display PulseStation, but cannot create accounts or fetch PSN data. Use your .onrender.com PulseStation URL.");
+    throw new Error(`Backend returned ${res.status} instead of API JSON. Check the Render deployment.`);
+  }
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok){const err=new Error(data.error||`Request failed (${res.status})`);err.code=data.code;err.hint=data.hint;throw err;}
   return data;
 }
 
@@ -471,21 +477,26 @@ function openAuthModal() {
   $$('[data-auth-tab]').forEach(btn => btn.addEventListener("click", () => {
     mode=btn.dataset.authTab; $$('[data-auth-tab]').forEach(b=>b.classList.toggle("active",b===btn));
     $("#register-fields").style.display=mode==="register"?"":"none";
-    submit.textContent=mode==="register"?"Create account + import PSN":"Sign in";
+    submit.textContent=mode==="register"?"Create account":"Sign in";
   }));
 
   $("#auth-form").addEventListener("submit", async e => {
-    e.preventDefault(); $("#auth-error").textContent=""; submit.disabled=true; submit.textContent=mode==="register"?"Creating + syncing…":"Signing in + refreshing PSN…";
+    e.preventDefault(); $("#auth-error").textContent=""; submit.disabled=true; submit.textContent=mode==="register"?"Creating account…":"Signing in…";
     const fd=new FormData(e.currentTarget);
     const body=mode==="register"
       ? {username:String(fd.get("username")||"").trim(),psnOnlineId:String(fd.get("psnOnlineId")||"").trim(),displayName:fd.get("displayName"),password:fd.get("password")}
       : {username:String(fd.get("username")||"").trim(),password:fd.get("password")};
     try{
       const data=await api(`/api/auth/${mode}`,{method:"POST",body:JSON.stringify(body)});
-      state.token=data.token; state.me=data.user; localStorage.setItem("pulse_token",state.token);
-      closeModal(); await load();
-      toast(mode==="login"?"Signed in and PSN refreshed":(data.psnImported?"Account created and PSN imported":"Account created. PSN sync can be retried later."));
-    }catch(err){ $("#auth-error").textContent=err.message; submit.disabled=false; submit.textContent=mode==="register"?"Create account + import PSN":"Sign in"; }
+      state.token=data.token;state.me=data.user;localStorage.setItem("pulse_token",state.token);
+      if(mode==="register"){
+        submit.textContent="Account created • importing PSN…";
+        let psnMessage="Account created.";
+        try{const sync=await api("/api/psn/sync",{method:"POST",body:JSON.stringify({onlineId:body.psnOnlineId})});state.me=sync.user;psnMessage="Account created and PSN profile imported.";}
+        catch(psnErr){psnMessage=`Account created. PSN import did not complete: ${psnErr.message}`;}
+        closeModal();await load();toast(psnMessage);
+      }else{closeModal();await load();toast("Signed in");}
+    }catch(err){$("#auth-error").textContent=err.hint?`${err.message} ${err.hint}`:err.message;submit.disabled=false;submit.textContent=mode==="register"?"Create account":"Sign in";}
   });
 }
 
@@ -595,6 +606,7 @@ async function refreshCommunityData() {
 }
 
 async function load() {
+  if(location.hostname.endsWith("github.io"))toast("GitHub Pages is frontend-only. Use the Render URL for accounts and PSN syncing.");
   const [status,games] = await Promise.all([api("/api/status"),api("/api/games")]);
   state.games=games.games; state.demoData=status.demoData; state.psnConfigured=Boolean(status.psnConfigured);
 

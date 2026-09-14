@@ -1,6 +1,6 @@
 {
   "name": "playstation-community-hub",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "PlayStation-themed community hub with local accounts and server-side PSN profile syncing.",
   "main": "server.js",
   "scripts": {

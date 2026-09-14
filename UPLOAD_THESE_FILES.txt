@@ -1,5 +1,4 @@
-PULSESTATION V2 - UPLOAD ALL 15 VISIBLE FILES
-=============================================
+PULSESTATION V3 - UPLOAD ALL FILES TO THE ROOT OF ONE GITHUB REPOSITORY
 
 DEPLOY.md
 ENV-EXAMPLE.txt
@@ -17,7 +16,6 @@ server.js
 store.js
 styles.css
 
-Total files: 15
+Visible file count: 15
 
-Upload all of them directly to the ROOT of one GitHub repository.
-Do not upload the ZIP itself.
+IMPORTANT: Run the live app on Render, not GitHub Pages.
