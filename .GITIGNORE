@@ -1,9 +1,0 @@
-This is the visible equivalent of a .gitignore file.
-If you want GitHub/Git to actively ignore these files, rename this file to .gitignore after upload/cloning.
-
-node_modules/
-.env
-db.json
-db.json.tmp
-npm-debug.log*
-.DS_Store
