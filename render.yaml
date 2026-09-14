@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: pulsestation-community
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/status
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PSN_SYNC_MODE
+        value: disabled

@@ -1,0 +1,24 @@
+{
+  "name": "playstation-community-hub",
+  "version": "1.0.0",
+  "description": "Polished PlayStation-inspired community hub with profiles, trophies, games, parties, groups, guides and reviews.",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "socket.io": "^4.8.1",
+    "zod": "^4.1.5"
+  }
+}
