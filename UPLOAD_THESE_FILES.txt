@@ -1,7 +1,5 @@
-PULSESTATION - 15 VISIBLE FILES
-================================
-
-Upload ALL of these files to the ROOT of one GitHub repository:
+PULSESTATION V2 - UPLOAD ALL 15 VISIBLE FILES
+=============================================
 
 DEPLOY.md
 ENV-EXAMPLE.txt
@@ -19,7 +17,7 @@ server.js
 store.js
 styles.css
 
-Total visible files: 15
+Total files: 15
 
-There are NO hidden dot-files in this edition.
-Do not upload the ZIP itself. Extract it first, then upload all files together.
+Upload all of them directly to the ROOT of one GitHub repository.
+Do not upload the ZIP itself.

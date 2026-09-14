@@ -1,0 +1,12 @@
+PORT=4173
+JWT_SECRET=change-this-to-a-long-random-secret
+APP_ORIGIN=http://localhost:4173
+
+# Leave blank locally to use db.json. Render fills this from its Postgres service.
+DATABASE_URL=
+DATA_DIR=
+
+# Live PlayStation importer. Keep PSN_NPSSO SERVER-SIDE ONLY.
+PSN_SYNC_MODE=psn-api
+PSN_AUTO_SYNC=true
+PSN_NPSSO=your-64-character-server-side-npsso-secret

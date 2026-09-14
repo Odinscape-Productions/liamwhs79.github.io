@@ -8,7 +8,8 @@ const state = {
   activity: [],
   demoData: true,
   selectedGame: null,
-  gameFilter: "all"
+  gameFilter: "all",
+  psnConfigured: false
 };
 
 const $ = (sel, parent = document) => parent.querySelector(sel);
@@ -30,6 +31,17 @@ function escapeHtml(value = "") {
   }[ch]));
 }
 
+function safeUrl(value = "") {
+  const url = String(value || "").trim();
+  return /^https?:\/\//i.test(url) ? url.replace(/["'()\\]/g, "") : "";
+}
+
+function gameCoverValue(game) {
+  const base = game?.cover || "linear-gradient(145deg,#071a38,#0b4fa7 55%,#48a6ff)";
+  const image = safeUrl(game?.imageUrl);
+  return image ? `linear-gradient(to top,rgba(2,8,18,.48),rgba(2,8,18,.06)),url(${image}) center / cover no-repeat` : base;
+}
+
 async function api(path, options = {}) {
   const headers = { "Content-Type":"application/json", ...(options.headers || {}) };
   if (state.token) headers.Authorization = `Bearer ${state.token}`;
@@ -48,6 +60,10 @@ function toast(message) {
 }
 
 function avatarHTML(user, size = "avatar-md") {
+  const remote = safeUrl(user?.psnProfilePicUrl || user?.psnAvatarUrl);
+  if (remote) {
+    return `<div class="avatar external ${size}"><img src="${escapeHtml(remote)}" alt="${escapeHtml(user?.handle || "PlayStation avatar")}"></div>`;
+  }
   const avatar = user?.avatar || "nova";
   return `<div class="avatar ${avatar} ${size}"><span class="avatar-glyph"></span></div>`;
 }
@@ -97,9 +113,9 @@ function closeModal() {
 function defaultGuest() {
   return {
     id:"guest", handle:"GUEST_PLAYER", displayName:"Guest Player",
-    bio:"Sign in to create parties, join groups, review games and customise your profile.",
+    bio:"Create a PulseStation account with your PSN Online ID to import your PlayStation profile.",
     avatar:"orbit", theme:"midnight", level:0, platinum:0,gold:0,silver:0,bronze:0,hours:0,
-    dataSource:"demo", library:[]
+    dataSource:"guest", library:[]
   };
 }
 
@@ -116,28 +132,33 @@ function renderChrome() {
   `;
   $("#side-profile-open")?.addEventListener("click", openProfileSettings);
 
-  const isPsn = me.dataSource === "psn-provider";
-  $("#side-data-state").textContent = isPsn ? "PSN provider linked" : (state.demoData ? "Demo stats active" : "Local account");
-  $("#side-data-copy").textContent = isPsn ? "Synced through your configured provider." : "Seeded PlayStation stats are clearly labelled.";
-  $("#demo-badge").style.display = state.demoData && !isPsn ? "" : "none";
+  const isPsn = me.dataSource === "psn-live";
+  $("#side-data-state").textContent = isPsn ? "Live PSN profile" : (state.me ? "Local account" : "Demo community");
+  $("#side-data-copy").textContent = isPsn
+    ? `Synced ${me.psnLastSync ? new Date(me.psnLastSync).toLocaleString("en-GB") : "from PlayStation"}.`
+    : (state.psnConfigured ? "Create an account with your PSN Online ID to import public profile data." : "PSN importer needs the server secret configured in Render.");
+  $("#open-sync").textContent = isPsn ? "Refresh PSN" : "PSN import";
+  $("#demo-badge").style.display = isPsn ? "none" : "";
+  $("#demo-badge").textContent = state.psnConfigured ? "PSN READY" : "DEMO";
 }
 
 function renderHome() {
   const me = state.me || defaultGuest();
+  const online = me.psnPresence?.onlineStatus || me.psnPresence?.primaryPlatformInfo?.onlineStatus;
+  const platform = me.psnPresence?.platform || me.psnPresence?.primaryPlatformInfo?.platform;
   $("#hero-player").innerHTML = `
     <div class="profile-orbit">
       ${avatarHTML(me,"avatar-xl")}
       <strong>${escapeHtml(me.displayName)}</strong>
-      <p>@${escapeHtml(me.handle)}</p>
+      <p>@${escapeHtml(me.handle)} ${me.psPlus ? "• PS Plus" : ""}</p>
       <span class="level-badge"><i></i> Trophy level ${Number(me.level || 0).toLocaleString()}</span>
+      ${me.dataSource === "psn-live" ? `<span class="psn-live-pill">● ${escapeHtml(online || "PSN synced")}${platform ? ` • ${escapeHtml(String(platform).toUpperCase())}` : ""}</span>` : ""}
     </div>
   `;
 
   const stats = [
-    ["Platinum",me.platinum,"platinum"],
-    ["Gold",me.gold,"gold"],
-    ["Silver",me.silver,"silver"],
-    ["Bronze",me.bronze,"bronze"],
+    ["Platinum",me.platinum,"platinum"], ["Gold",me.gold,"gold"],
+    ["Silver",me.silver,"silver"], ["Bronze",me.bronze,"bronze"],
     ["Hours played",Number(me.hours || 0).toLocaleString(),""]
   ];
   $("#stat-strip").innerHTML = stats.map(([label,val,cls]) => `
@@ -149,19 +170,19 @@ function renderHome() {
     {gameId:"helldivers-2",hours:246,progress:61,trophies:24,lastPlayed:"Yesterday"},
     {gameId:"spider-man-2",hours:73,progress:100,trophies:42,lastPlayed:"3 days ago"},
     {gameId:"astro-bot",hours:41,progress:76,trophies:34,lastPlayed:"1 week ago"}
-  ]).slice(0,5);
+  ]).slice(0,8);
 
   $("#recent-games").innerHTML = recent.map(item => {
-    const game = gameById(item.gameId);
-    if (!game) return "";
+    const game = gameById(item.gameId); if (!game) return "";
+    const total = item.trophyCount || game.trophyCount || 0;
     return `
-      <button class="game-card" data-open-game="${game.slug}" style="--game-cover:${game.cover};--game-accent:${game.accent}">
-        ${state.demoData && me.dataSource !== "psn-provider" ? `<span class="demo-tag">DEMO DATA</span>` : ""}
+      <button class="game-card" data-open-game="${escapeHtml(game.slug)}" style="--game-cover:${escapeHtml(gameCoverValue(game))};--game-accent:${escapeHtml(game.accent || "#3e8bff")}">
+        ${game.source === "psn" ? `<span class="demo-tag live-tag">PSN LIVE</span>` : `<span class="demo-tag">DEMO DATA</span>`}
         <div class="game-card-content">
           <h3>${escapeHtml(game.title)}</h3>
-          <p>${item.hours} hours • ${item.trophies}/${game.trophyCount} trophies</p>
-          <div class="progress-line"><span style="width:${item.progress}%"></span></div>
-          <div class="game-card-meta"><span>${item.progress}% complete</span><span>${escapeHtml(item.lastPlayed)}</span></div>
+          <p>${Number(item.hours || 0).toLocaleString()} hours ${total ? `• ${item.trophies}/${total} trophies` : ""}</p>
+          <div class="progress-line"><span style="width:${Math.max(0,Math.min(100,item.progress || 0))}%"></span></div>
+          <div class="game-card-meta"><span>${item.progress || 0}% complete</span><span>${escapeHtml(item.lastPlayed || "")}</span></div>
         </div>
       </button>`;
   }).join("");
@@ -173,7 +194,7 @@ function renderHome() {
 function partyRowHTML(p) {
   return `
   <div class="party-row">
-    <div class="game-token" style="--game-cover:${p.game?.cover || "var(--panel-hi)"}">${escapeHtml(p.game?.short || "GAME")}</div>
+    <div class="game-token" style="--game-cover:${escapeHtml(gameCoverValue(p.game))}">${escapeHtml(p.game?.short || "GAME")}</div>
     <div class="party-row-copy"><strong>${escapeHtml(p.title)}</strong><small>${escapeHtml(p.game?.title || "")} • ${p.members.length}/${p.maxMembers}</small></div>
     <div class="member-bubbles">${(p.memberProfiles || []).slice(0,3).map(u => avatarHTML(u,"")).join("")}</div>
   </div>`;
@@ -194,18 +215,23 @@ function renderGames() {
   if (state.gameFilter === "owned") games = games.filter(g => meLibrary(g.id));
   if (state.gameFilter === "platinum") games = games.filter(g => meLibrary(g.id)?.progress >= 100);
 
+  games.sort((a,b) => {
+    const ao = meLibrary(a.id) ? 1 : 0, bo = meLibrary(b.id) ? 1 : 0;
+    return bo - ao;
+  });
+
   $("#games-grid").innerHTML = games.map(g => {
-    const item = meLibrary(g.id);
-    const progress = item?.progress ?? 0;
+    const item = meLibrary(g.id); const progress = item?.progress ?? 0;
+    const trophyTotal = item?.trophyCount || g.trophyCount || 0;
     return `
-      <button class="library-card" data-open-game="${g.slug}" style="--game-cover:${g.cover};--game-accent:${g.accent}">
-        ${state.demoData && state.me?.dataSource !== "psn-provider" ? `<span class="demo-tag">DEMO CATALOG</span>` : ""}
+      <button class="library-card" data-open-game="${escapeHtml(g.slug)}" style="--game-cover:${escapeHtml(gameCoverValue(g))};--game-accent:${escapeHtml(g.accent || "#3e8bff")}">
+        <span class="demo-tag ${g.source === "psn" ? "live-tag" : ""}">${g.source === "psn" ? "PSN LIVE" : "DEMO CATALOG"}</span>
         <div class="library-card-content">
           <span class="platform-pill">${escapeHtml(g.platform)}</span>
           <h3>${escapeHtml(g.title)}</h3>
-          <p>${escapeHtml(g.genre)} ${item ? `• ${item.hours} hours played` : "• Community game"}</p>
-          <div class="progress-line"><span style="width:${progress}%"></span></div>
-          <div class="library-card-foot"><span>${item ? `${item.trophies}/${g.trophyCount} trophies` : `${g.trophyCount} trophies`}</span><span>${progress}%</span></div>
+          <p>${escapeHtml(g.genre)} ${item ? `• ${Number(item.hours || 0).toLocaleString()} hours played` : "• Community game"}</p>
+          <div class="progress-line"><span style="width:${Math.max(0,Math.min(100,progress))}%"></span></div>
+          <div class="library-card-foot"><span>${trophyTotal ? `${item?.trophies || 0}/${trophyTotal} trophies` : "PlayStation activity"}</span><span>${progress}%</span></div>
         </div>
       </button>`;
   }).join("") || `<div class="empty">Nothing matches this filter yet.</div>`;
@@ -223,12 +249,12 @@ function renderTrophies() {
     ["Silver",me.silver,"var(--silver)"],["Bronze",me.bronze,"var(--bronze)"]
   ].map(([l,v,c]) => `<div class="trophy-count" style="border-top-color:${c}"><b style="color:${c}">${v || 0}</b><small>${l}</small></div>`).join("");
 
-  const trophies = state.games.flatMap(g => g.trophies.filter(t => t.earned).map(t => ({...t,game:g}))).slice(0,9);
-  $("#trophy-grid").innerHTML = trophies.map(t => `
+  const trophies = state.games.flatMap(g => (g.trophies || []).filter(t => t.earned).map(t => ({...t,game:g}))).slice(0,9);
+  $("#trophy-grid").innerHTML = trophies.length ? trophies.map(t => `
     <div class="trophy-card" style="--trophy-color:${trophyColor(t.grade)}">
       <div class="trophy-icon"></div>
       <div><h3>${escapeHtml(t.name)}</h3><p>${escapeHtml(t.game.title)}</p><small>${escapeHtml(t.rarity)} • ${escapeHtml(t.grade)}</small></div>
-    </div>`).join("");
+    </div>`).join("") : `<div class="empty">Open one of your PSN-imported games to load its detailed trophy list.</div>`;
 }
 
 function renderParties() {
@@ -238,7 +264,7 @@ function renderParties() {
     return `
       <article class="party-card">
         <div class="party-card-top">
-          <div class="game-token" style="--game-cover:${p.game?.cover}">${escapeHtml(p.game?.short)}</div>
+          <div class="game-token" style="--game-cover:${escapeHtml(gameCoverValue(p.game))}">${escapeHtml(p.game?.short)}</div>
           <div><span class="eyebrow">${escapeHtml(p.game?.title)}</span><h3>${escapeHtml(p.title)}</h3><p>Hosted by @${escapeHtml(p.host?.handle || "player")}</p></div>
         </div>
         <div class="party-tags"><span class="tag">${escapeHtml(p.startsAt)}</span><span class="tag">${escapeHtml(p.mic)}</span><span class="tag">${escapeHtml(p.skill)}</span></div>
@@ -255,7 +281,7 @@ function renderGroups() {
     const joined = g.members.includes(state.me?.id);
     return `
       <article class="group-card">
-        <div class="group-banner" style="--game-cover:${g.game?.cover}"></div>
+        <div class="group-banner" style="--game-cover:${escapeHtml(gameCoverValue(g.game))}"></div>
         <div class="group-body">
           <span class="eyebrow">${escapeHtml(g.game?.title)}</span>
           <h3>${escapeHtml(g.name)}</h3>
@@ -289,63 +315,47 @@ async function openGame(slug) {
   try {
     const data = await api(`/api/games/${encodeURIComponent(slug)}`);
     state.selectedGame = data.game;
+    const gameIndex = state.games.findIndex(g => g.id === data.game.id);
+    if (gameIndex >= 0) state.games[gameIndex] = data.game;
     renderGameDetail(data);
     route("game-detail");
   } catch (err) { toast(err.message); }
 }
 
 function renderGameDetail(data) {
-  const g = data.game;
-  const lib = meLibrary(g.id);
+  const g = data.game; const lib = meLibrary(g.id); const trophies = g.trophies || [];
   $("#game-detail").innerHTML = `
-    <section class="game-detail-hero" style="--game-cover:${g.cover}">
-      ${state.demoData && state.me?.dataSource !== "psn-provider" ? `<span class="demo-tag">DEMO GAME DATA</span>` : ""}
+    <section class="game-detail-hero" style="--game-cover:${escapeHtml(gameCoverValue(g))}">
+      <span class="demo-tag ${g.source === "psn" ? "live-tag" : ""}">${g.source === "psn" ? "PSN LIVE DATA" : "DEMO GAME DATA"}</span>
       <div class="game-detail-copy">
         <span class="eyebrow">${escapeHtml(g.platform)} • ${escapeHtml(g.genre)}</span>
         <h2>${escapeHtml(g.title)}</h2>
         <p>${escapeHtml(g.description)}</p>
         <div class="game-detail-actions">
-          <button class="primary-button" data-detail-tab="trophies">${g.trophyCount} trophies</button>
+          <button class="primary-button">${g.trophyCount || trophies.length || 0} trophies</button>
           ${g.mapGenieUrl ? `<a class="glass-button" href="${escapeHtml(g.mapGenieUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;text-decoration:none">Open MapGenie ↗</a>` : ""}
           <button class="glass-button" id="review-game">Write review</button>
         </div>
       </div>
     </section>
-
     <div class="detail-grid">
       <div class="panel">
-        <div class="section-heading compact"><div><span class="eyebrow">GUIDE + CHECKLIST</span><h2>Trophy list</h2></div><small style="color:var(--muted)">${lib ? `${lib.progress}% complete` : "Community guide"}</small></div>
+        <div class="section-heading compact"><div><span class="eyebrow">${g.source === "psn" ? "LIVE PSN TROPHIES" : "GUIDE + CHECKLIST"}</span><h2>Trophy list</h2></div><small style="color:var(--muted)">${lib ? `${lib.progress}% complete` : "Community guide"}</small></div>
         <div class="trophy-list">
-          ${g.trophies.map(t => `
+          ${trophies.length ? trophies.map(t => `
             <div class="trophy-row" style="--trophy-color:${trophyColor(t.grade)}">
-              <div class="trophy-icon"></div>
-              <div><h4>${escapeHtml(t.name)}</h4><p>${escapeHtml(t.tip)}</p></div>
-              <span class="rarity">${escapeHtml(t.rarity)}</span>
-            </div>`).join("")}
+              ${t.iconUrl ? `<div class="trophy-icon remote-trophy"><img src="${escapeHtml(safeUrl(t.iconUrl))}" alt=""></div>` : `<div class="trophy-icon"></div>`}
+              <div><h4>${escapeHtml(t.hidden && !t.earned ? "Hidden trophy" : t.name)}</h4><p>${escapeHtml(t.hidden && !t.earned ? "Earn this trophy to reveal its description." : t.tip)}</p></div>
+              <span class="rarity">${t.earned ? "✓ EARNED • " : ""}${escapeHtml(t.rarity || "")}</span>
+            </div>`).join("") : `<div class="empty">${g.source === "psn" ? (state.me ? "Detailed trophies are unavailable for this title or hidden by PSN privacy." : "Sign in to load your earned trophy details for this game.") : "No trophy guide has been added yet."}</div>`}
         </div>
       </div>
-
       <div class="stack">
-        <div class="panel">
-          <span class="eyebrow">ACTIVE PARTIES</span>
-          <h3 style="margin:5px 0 12px">${data.parties.length} squads open</h3>
-          <div class="stack">${data.parties.map(partyRowHTML).join("") || `<div class="empty">No parties for this game yet.</div>`}</div>
-        </div>
-        <div class="panel">
-          <span class="eyebrow">PLAYER REVIEWS</span>
-          <h3 style="margin:5px 0 4px">${data.reviews.length} community takes</h3>
-          <div>${data.reviews.map(r => `
-            <div class="review">
-              <div class="review-top">
-                <div class="review-user">${avatarHTML(r.user,"")}<strong>@${escapeHtml(r.user?.handle || "player")}</strong></div>
-                <span class="stars">${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)}</span>
-              </div>
-              <p>${escapeHtml(r.body)}</p>
-            </div>`).join("") || `<div class="empty">Be the first reviewer.</div>`}</div>
-        </div>
+        <div class="panel"><span class="eyebrow">ACTIVE PARTIES</span><h3 style="margin:5px 0 12px">${data.parties.length} squads open</h3><div class="stack">${data.parties.map(partyRowHTML).join("") || `<div class="empty">No parties for this game yet.</div>`}</div></div>
+        <div class="panel"><span class="eyebrow">PLAYER REVIEWS</span><h3 style="margin:5px 0 4px">${data.reviews.length} community takes</h3><div>${data.reviews.map(r => `
+          <div class="review"><div class="review-top"><div class="review-user">${avatarHTML(r.user,"")}<strong>@${escapeHtml(r.user?.handle || "player")}</strong></div><span class="stars">${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)}</span></div><p>${escapeHtml(r.body)}</p></div>`).join("") || `<div class="empty">Be the first reviewer.</div>`}</div></div>
       </div>
-    </div>
-  `;
+    </div>`;
   $("#review-game")?.addEventListener("click", () => openReviewModal(g));
 }
 
@@ -355,7 +365,8 @@ function openProfileSettings() {
   openModal(`
     <span class="eyebrow">PROFILE STUDIO</span>
     <h2>Make it yours</h2>
-    <p class="modal-intro">Choose an original avatar, change the entire app theme and control what your community profile says.</p>
+    <p class="modal-intro">Your PlayStation stats are imported automatically. Your display name, bio and PulseStation theme stay under your control.</p>
+    ${me.dataSource === "psn-live" ? `<div class="notice psn-notice"><b>PSN linked:</b> @${escapeHtml(me.psnOnlineId)} • Trophy level ${me.level} • last synced ${me.psnLastSync ? new Date(me.psnLastSync).toLocaleString("en-GB") : "recently"}.</div>` : `<div class="notice">PSN data has not synced yet. Use Refresh PSN after the server importer is configured.</div>`}
     <form id="profile-form">
       <div class="form-grid">
         <div class="field"><label>Display name</label><input name="displayName" value="${escapeHtml(me.displayName)}" maxlength="36"></div>
@@ -366,7 +377,7 @@ function openProfileSettings() {
       </div>
       <input type="hidden" name="avatar" value="${me.avatar}">
       <input type="hidden" name="theme" value="${me.theme}">
-      <div class="modal-actions"><button type="button" class="glass-button" id="logout">Log out</button><button class="primary-button">Save profile</button></div>
+      <div class="modal-actions"><button type="button" class="glass-button" id="change-password">Password</button><button type="button" class="glass-button" id="profile-refresh-psn">Refresh PSN</button><button type="button" class="glass-button" id="logout">Log out</button><button class="primary-button">Save profile</button></div>
     </form>
   `);
 
@@ -379,6 +390,23 @@ function openProfileSettings() {
     $('[name="theme"]').value = btn.dataset.themeChoice;
     setTheme(btn.dataset.themeChoice);
   }));
+  $("#profile-refresh-psn")?.addEventListener("click", () => { closeModal(); openSyncModal(); });
+  $("#change-password")?.addEventListener("click", () => {
+    openModal(`
+      <span class="eyebrow">ACCOUNT SECURITY</span><h2>Change password</h2>
+      <p class="modal-intro">This changes your PulseStation password only. It does not affect your PlayStation account.</p>
+      <form id="password-form">
+        <div class="field"><label>Current password</label><input type="password" name="currentPassword" autocomplete="current-password"></div>
+        <div class="field" style="margin-top:10px"><label>New password</label><input type="password" name="newPassword" minlength="8" autocomplete="new-password"></div>
+        <div id="password-error" class="form-error"></div>
+        <div class="modal-actions"><button class="primary-button">Update password</button></div>
+      </form>`);
+    $("#password-form").addEventListener("submit", async e => {
+      e.preventDefault(); const fd = new FormData(e.currentTarget);
+      try { await api("/api/me/password", {method:"PUT",body:JSON.stringify({currentPassword:fd.get("currentPassword"),newPassword:fd.get("newPassword")})}); closeModal(); toast("Password updated"); }
+      catch(err){ $("#password-error").textContent=err.message; }
+    });
+  });
   $("#logout").addEventListener("click", () => {
     localStorage.removeItem("pulse_token"); state.token=""; state.me=null; closeModal(); setTheme("midnight"); renderAll(); toast("Signed out");
   });
@@ -404,39 +432,60 @@ function openProfileSettings() {
 function openAuthModal() {
   openModal(`
     <span class="eyebrow">PULSESTATION ACCOUNT</span>
-    <h2>Join the community</h2>
-    <p class="modal-intro">App accounts are separate from PlayStation accounts. Never enter your PlayStation password here.</p>
-    <div class="notice">Demo login: <b>liam@demo.local</b> / <b>Play1234!</b>. The trophy and playtime data is seeded demo content.</div>
+    <h2>Create your player account</h2>
+    <p class="modal-intro">No email address required. PulseStation uses a local username + password, then your PSN Online ID is used to automatically import the PlayStation side of your profile.</p>
+    <div class="notice"><b>Never enter your Sony/PlayStation password here.</b> Your PulseStation password is separate, and the PSN importer runs server-side.</div>
     <div class="login-split"><button class="active" data-auth-tab="login">Sign in</button><button data-auth-tab="register">Create account</button></div>
     <form id="auth-form">
+      <div class="field"><label>PulseStation username</label><input name="username" minlength="3" maxlength="24" placeholder="Choose a username" autocomplete="username"></div>
       <div id="register-fields" style="display:none">
-        <div class="form-grid">
-          <div class="field"><label>Display name</label><input name="displayName" value="Player One"></div>
-          <div class="field"><label>Handle</label><input name="handle" value="PLAYER_ONE"></div>
+        <div class="form-grid" style="margin-top:10px">
+          <div class="field"><label>PSN Online ID</label><input name="psnOnlineId" minlength="3" maxlength="16" placeholder="Your_PSN_Name"></div>
+          <div class="field"><label>Display name <span style="opacity:.6">(optional)</span></label><input name="displayName" maxlength="36" placeholder="How people see you"></div>
         </div>
+        <div id="psn-preview" class="psn-preview"><span>Type your PSN Online ID and PulseStation will fetch the PlayStation profile automatically.</span></div>
       </div>
-      <div class="field" style="margin-top:10px"><label>Email</label><input type="email" name="email" value="liam@demo.local"></div>
-      <div class="field" style="margin-top:10px"><label>Password</label><input type="password" name="password" value="Play1234!"></div>
+      <div class="field" style="margin-top:10px"><label>PulseStation password</label><input type="password" name="password" minlength="8" autocomplete="current-password" placeholder="At least 8 characters"></div>
       <div id="auth-error" class="form-error"></div>
-      <div class="modal-actions"><button class="primary-button" style="width:100%">Continue</button></div>
+      <div class="modal-actions"><button class="primary-button" style="width:100%" id="auth-submit">Sign in</button></div>
     </form>
   `);
   let mode="login";
-  $$("[data-auth-tab]").forEach(btn => btn.addEventListener("click", () => {
-    mode=btn.dataset.authTab;
-    $$("[data-auth-tab]").forEach(b=>b.classList.toggle("active",b===btn));
+  const usernameInput = $('[name="username"]');
+  const psnInput = $('[name="psnOnlineId"]');
+  const submit = $("#auth-submit");
+
+  async function previewPsn() {
+    if (mode !== "register" || !psnInput) return;
+    const onlineId=psnInput.value.trim(); if(onlineId.length<3)return;
+    const box=$("#psn-preview"); box.innerHTML=`<span class="loading-dot">●</span> Looking up @${escapeHtml(onlineId)} on PlayStation…`;
+    try{
+      const data=await api("/api/psn/lookup",{method:"POST",body:JSON.stringify({onlineId})});
+      const p=data.profile;
+      box.innerHTML=`<div class="psn-preview-card">${avatarHTML({handle:p.onlineId,psnProfilePicUrl:p.profilePicUrl,psnAvatarUrl:p.avatarUrl},"avatar-md")}<div><b>@${escapeHtml(p.onlineId)}</b><small>Level ${Number(p.level||0).toLocaleString()} • ${Number(p.trophies?.platinum||0)} platinum${p.plus?" • PS Plus":""}</small></div><span class="live-check">PSN FOUND</span></div>`;
+    }catch(err){ box.innerHTML=`<span>${escapeHtml(err.message)} You can still create the local account and sync later.</span>`; }
+  }
+  let previewTimer;
+  psnInput?.addEventListener("input",()=>{clearTimeout(previewTimer);previewTimer=setTimeout(previewPsn,700)});
+
+  $$('[data-auth-tab]').forEach(btn => btn.addEventListener("click", () => {
+    mode=btn.dataset.authTab; $$('[data-auth-tab]').forEach(b=>b.classList.toggle("active",b===btn));
     $("#register-fields").style.display=mode==="register"?"":"none";
+    submit.textContent=mode==="register"?"Create account + import PSN":"Sign in";
   }));
+
   $("#auth-form").addEventListener("submit", async e => {
-    e.preventDefault(); $("#auth-error").textContent="";
+    e.preventDefault(); $("#auth-error").textContent=""; submit.disabled=true; submit.textContent=mode==="register"?"Creating + syncing…":"Signing in + refreshing PSN…";
     const fd=new FormData(e.currentTarget);
-    const body={email:fd.get("email"),password:fd.get("password")};
-    if(mode==="register"){body.displayName=fd.get("displayName");body.handle=fd.get("handle")}
+    const body=mode==="register"
+      ? {username:String(fd.get("username")||"").trim(),psnOnlineId:String(fd.get("psnOnlineId")||"").trim(),displayName:fd.get("displayName"),password:fd.get("password")}
+      : {username:String(fd.get("username")||"").trim(),password:fd.get("password")};
     try{
       const data=await api(`/api/auth/${mode}`,{method:"POST",body:JSON.stringify(body)});
       state.token=data.token; state.me=data.user; localStorage.setItem("pulse_token",state.token);
-      closeModal(); await load(); toast(mode==="login"?"Welcome back":"Account created");
-    }catch(err){$("#auth-error").textContent=err.message}
+      closeModal(); await load();
+      toast(mode==="login"?"Signed in and PSN refreshed":(data.psnImported?"Account created and PSN imported":"Account created. PSN sync can be retried later."));
+    }catch(err){ $("#auth-error").textContent=err.message; submit.disabled=false; submit.textContent=mode==="register"?"Create account + import PSN":"Sign in"; }
   });
 }
 
@@ -514,21 +563,22 @@ function openReviewModal(game) {
 function openSyncModal() {
   if (!state.me) return openAuthModal();
   openModal(`
-    <span class="eyebrow">REAL PLAYSTATION DATA</span><h2>Connect a PSN provider</h2>
-    <p class="modal-intro">This starter does not pretend its demo stats are real. The backend has a provider boundary, but real syncing stays disabled until you configure an authorised integration.</p>
-    <div class="notice"><b>Security rule:</b> never ask users for their PlayStation password. The supplied backend accepts only an Online ID and calls your configured server-side provider.</div>
+    <span class="eyebrow">PLAYSTATION IMPORTER</span><h2>Refresh your PSN profile</h2>
+    <p class="modal-intro">PulseStation uses only your PSN Online ID here. The server fetches the profile, avatar, trophy summary, trophy-title history, played games/playtime and presence that your PlayStation privacy settings allow.</p>
+    <div class="notice"><b>Your Sony password is never used.</b> The server-side PSN service credential lives only in Render's protected environment variables.</div>
     <form id="sync-form">
-      <div class="field"><label>PSN Online ID</label><input name="onlineId" value="${escapeHtml(state.me.handle || "")}" maxlength="32"></div>
+      <div class="field"><label>PSN Online ID</label><input name="onlineId" value="${escapeHtml(state.me.psnOnlineId || state.me.handle || "")}" maxlength="16"></div>
       <div id="sync-message" class="form-error"></div>
-      <div class="modal-actions"><button class="primary-button">Try sync</button></div>
+      <div class="modal-actions"><button class="primary-button" id="sync-submit">Fetch everything available</button></div>
     </form>
   `);
   $("#sync-form").addEventListener("submit", async e => {
-    e.preventDefault(); const fd=new FormData(e.currentTarget);
+    e.preventDefault(); const fd=new FormData(e.currentTarget); const btn=$("#sync-submit");btn.disabled=true;btn.textContent="Fetching PlayStation data…";
     try{
       const data=await api("/api/psn/sync",{method:"POST",body:JSON.stringify({onlineId:fd.get("onlineId")})});
-      state.me=data.user; $("#sync-message").className="form-success"; $("#sync-message").textContent="Sync complete."; renderAll();
-    }catch(err){$("#sync-message").textContent=err.message}
+      state.me=data.user; $("#sync-message").className="form-success"; $("#sync-message").textContent="PSN import complete. Updating your library…";
+      await load(); setTimeout(closeModal,500); toast("PlayStation profile refreshed");
+    }catch(err){ $("#sync-message").textContent=err.message; btn.disabled=false; btn.textContent="Fetch everything available"; }
   });
 }
 
@@ -546,7 +596,7 @@ async function refreshCommunityData() {
 
 async function load() {
   const [status,games] = await Promise.all([api("/api/status"),api("/api/games")]);
-  state.games=games.games; state.demoData=status.demoData;
+  state.games=games.games; state.demoData=status.demoData; state.psnConfigured=Boolean(status.psnConfigured);
 
   if(state.token){
     try{state.me=(await api("/api/me")).user}

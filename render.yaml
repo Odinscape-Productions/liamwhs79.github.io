@@ -1,3 +1,9 @@
+databases:
+  - name: pulsestation-db
+    plan: free
+    databaseName: pulsestation
+    user: pulsestation
+
 services:
   - type: web
     name: pulsestation-community
@@ -12,5 +18,13 @@ services:
         value: production
       - key: JWT_SECRET
         generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pulsestation-db
+          property: connectionString
       - key: PSN_SYNC_MODE
-        value: disabled
+        value: psn-api
+      - key: PSN_AUTO_SYNC
+        value: "true"
+      - key: PSN_NPSSO
+        sync: false
