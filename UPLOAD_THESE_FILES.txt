@@ -1,21 +1,20 @@
-PULSESTATION V3 - UPLOAD ALL FILES TO THE ROOT OF ONE GITHUB REPOSITORY
+PULSESTATION V5 — GITHUB PAGES EDITION
+=======================================
 
-DEPLOY.md
-ENV-EXAMPLE.txt
-GITIGNORE.txt
+Upload ALL files below to the ROOT of your GitHub repository:
+
+DEPLOY-GITHUB-PAGES.md
 README.md
-UPLOAD_THESE_FILES.txt
+TRACKER-SOURCES.md
 app.js
-auth.js
+icon.svg
 index.html
-package.json
-psnProvider.js
-render.yaml
-seed.js
-server.js
-store.js
+manifest.webmanifest
+psn-importer.js
+seed-data.js
+service-worker.js
+storage.js
 styles.css
+UPLOAD_THESE_FILES.txt
 
-Visible file count: 15
-
-IMPORTANT: Run the live app on Render, not GitHub Pages.
+No Render, Node server, database server or hidden files are required.

@@ -1,0 +1,17 @@
+{
+  "name": "PulseStation Community",
+  "short_name": "PulseStation",
+  "description": "PlayStation-inspired local community hub with public trophy tracker importing.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#06101d",
+  "theme_color": "#1478ff",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
