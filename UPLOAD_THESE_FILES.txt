@@ -1,0 +1,21 @@
+PULSESTATION V3 - UPLOAD ALL FILES TO THE ROOT OF ONE GITHUB REPOSITORY
+
+DEPLOY.md
+ENV-EXAMPLE.txt
+GITIGNORE.txt
+README.md
+UPLOAD_THESE_FILES.txt
+app.js
+auth.js
+index.html
+package.json
+psnProvider.js
+render.yaml
+seed.js
+server.js
+store.js
+styles.css
+
+Visible file count: 15
+
+IMPORTANT: Run the live app on Render, not GitHub Pages.
