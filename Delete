@@ -1,0 +1,14 @@
+# Source - https://stackoverflow.com/a/9051899
+# Posted by pascal, modified by community. See post 'Timeline' for change history
+# Retrieved 2026-09-14, License - CC BY-SA 4.0
+
+cd /tmp
+git clone /your/local/rep  # make a temp copy
+cd rep
+git rm -r *                # delete everything
+cp -r /your/local/rep/* .  # get only the files you want
+git add *                  # add them again
+git status                 # everything but those copied will be removed
+git commit -a -m 'deleting stuff'
+cd /your/local/rep
+git pull /tmp/rep          # now everything else has been removed
