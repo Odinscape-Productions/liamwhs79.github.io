@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <meta name="description" content="PulseStation — a PlayStation-inspired local community hub with public trophy tracker importing.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>PulseStation</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-theme="midnight">
+  <div class="app-bg" aria-hidden="true">
+    <span class="orb orb-a"></span><span class="orb orb-b"></span><span class="orb orb-c"></span><span class="grid-glow"></span>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <button class="brand" data-route="home" aria-label="PulseStation home">
+        <span class="brand-mark"><i class="shape shape-triangle"></i><i class="shape shape-circle"></i><i class="shape shape-square"></i><i class="shape shape-cross"></i></span>
+        <span class="brand-copy"><b>PULSE</b><em>STATION</em><small>PLAY • CONNECT • COLLECT</small></span>
+      </button>
+
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <button class="nav-link active" data-route="home"><span>⌂</span><b>Home</b></button>
+        <button class="nav-link" data-route="games"><span>▦</span><b>Games</b></button>
+        <button class="nav-link" data-route="trophies"><span>♜</span><b>Trophies</b></button>
+        <button class="nav-link" data-route="parties"><span>◉</span><b>Parties</b></button>
+        <button class="nav-link" data-route="groups"><span>◇</span><b>Groups</b></button>
+        <button class="nav-link" data-route="messages"><span>✦</span><b>Messages</b><i id="message-dot"></i></button>
+        <button class="nav-link" data-route="community"><span>◎</span><b>Community</b></button>
+      </nav>
+
+      <div class="sidebar-card">
+        <span class="eyebrow">Profile source</span>
+        <strong id="side-data-state">Local profile</strong>
+        <small id="side-data-copy">Public tracker data can be refreshed without a Sony login.</small>
+        <button class="soft-button" id="open-sync">Import public PSN data</button>
+      </div>
+      <div class="sidebar-user" id="sidebar-user"></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><span class="eyebrow" id="page-kicker">PLAYSTATION COMMUNITY HUB</span><h1 id="page-title">Good evening</h1></div>
+        <div class="top-actions">
+          <label class="searchbox"><span>⌕</span><input id="global-search" type="search" placeholder="Search games, players, groups…" autocomplete="off"></label>
+          <button class="status-pill" id="source-badge">LOCAL</button>
+          <button class="icon-button bell-button" id="notification-button" aria-label="Notifications">♢<span id="notification-count"></span></button>
+          <button class="avatar-button" id="profile-button" aria-label="Open profile"></button>
+        </div>
+      </header>
+
+      <div class="route-wrap">
+        <section class="route active" data-page="home">
+          <div class="hero">
+            <div class="hero-copy">
+              <div class="live-pill"><span></span> COMMUNITY READY</div>
+              <h2>Your PlayStation life,<br><em>built around community.</em></h2>
+              <p>Public trophy stats, local profiles, parties, groups, messages, reviews, guides and game-night planning in one PlayStation-inspired hub.</p>
+              <div class="hero-actions">
+                <button class="primary-button" data-route="games">Explore your games</button>
+                <button class="glass-button" id="hero-edit-profile">Customise profile</button>
+              </div>
+            </div>
+            <div class="hero-player" id="hero-player"></div>
+          </div>
+
+          <div class="stat-strip" id="stat-strip"></div>
+
+          <div class="section-heading">
+            <div><span class="eyebrow">JUMP BACK IN</span><h2>Your games</h2></div>
+            <button class="text-button" data-route="games">View library →</button>
+          </div>
+          <div class="game-rail" id="recent-games"></div>
+
+          <div class="home-grid">
+            <div class="panel">
+              <div class="section-heading compact"><div><span class="eyebrow">OPEN SQUADS</span><h2>Parties</h2></div><button class="text-button" data-route="parties">Browse →</button></div>
+              <div id="home-parties" class="stack"></div>
+            </div>
+            <div class="panel">
+              <div class="section-heading compact"><div><span class="eyebrow">COMMUNITY PULSE</span><h2>Recent activity</h2></div><button class="text-button" data-route="community">See all →</button></div>
+              <div id="activity-feed" class="activity-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="route" data-page="games">
+          <div class="section-heading page-heading">
+            <div><span class="eyebrow">LIBRARY + DISCOVERY</span><h2>Games</h2><p>Track progress, backlog, wishlist, guides and community notes.</p></div>
+            <div class="filter-row">
+              <button class="chip active" data-game-filter="all">All</button>
+              <button class="chip" data-game-filter="owned">My library</button>
+              <button class="chip" data-game-filter="backlog">Backlog</button>
+              <button class="chip" data-game-filter="wishlist">Wishlist</button>
+            </div>
+          </div>
+          <div class="games-grid" id="games-grid"></div>
+        </section>
+
+        <section class="route" data-page="trophies">
+          <div class="trophy-hero">
+            <div><span class="eyebrow">TROPHY CABINET</span><h2>Make the grind look glorious.</h2><p>Imported public totals plus your locally pinned showcase and completion notes.</p></div>
+            <div class="trophy-ring" id="trophy-ring"><strong>0</strong><span>PLATINUM</span></div>
+          </div>
+          <div class="trophy-summary" id="trophy-summary"></div>
+          <div class="section-heading"><div><span class="eyebrow">SHOWCASE</span><h2>Featured trophies</h2></div><button class="glass-button mini" id="manage-showcase">Manage showcase</button></div>
+          <div class="trophy-grid" id="trophy-grid"></div>
+          <div class="panel source-panel" id="tracker-source-panel"></div>
+        </section>
+
+        <section class="route" data-page="parties">
+          <div class="section-heading page-heading">
+            <div><span class="eyebrow">LOCAL LFG</span><h2>Parties</h2><p>Create game-night sessions and switch between local accounts to test joining.</p></div>
+            <button class="primary-button" id="new-party">+ Create party</button>
+          </div>
+          <div class="party-grid" id="party-grid"></div>
+        </section>
+
+        <section class="route" data-page="groups">
+          <div class="section-heading page-heading">
+            <div><span class="eyebrow">GAME COMMUNITIES</span><h2>Groups</h2><p>Persistent local spaces with membership and group chat.</p></div>
+            <button class="primary-button" id="new-group">+ Create group</button>
+          </div>
+          <div class="groups-grid" id="groups-grid"></div>
+        </section>
+
+        <section class="route" data-page="messages">
+          <div class="section-heading page-heading"><div><span class="eyebrow">DIRECT MESSAGES</span><h2>Messages</h2><p>Stored locally on this device, Berry Haven-style.</p></div></div>
+          <div class="messages-layout">
+            <div class="panel conversation-list" id="conversation-list"></div>
+            <div class="panel chat-panel" id="chat-panel"></div>
+          </div>
+        </section>
+
+        <section class="route" data-page="community">
+          <div class="section-heading page-heading">
+            <div><span class="eyebrow">DISCOVER PLAYERS</span><h2>Community</h2><p>Local accounts and demo community profiles for testing social features.</p></div>
+            <button class="glass-button" id="compare-profiles">Compare profiles</button>
+          </div>
+          <div class="community-layout">
+            <div class="community-grid" id="community-grid"></div>
+            <div class="panel sticky-panel"><span class="eyebrow">ACTIVITY FEED</span><h3>What’s happening</h3><div id="community-activity" class="activity-list"></div></div>
+          </div>
+        </section>
+
+        <section class="route game-detail-page" data-page="game-detail">
+          <button class="back-button" id="game-back">← Back to games</button>
+          <div id="game-detail"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <nav class="mobile-nav" aria-label="Mobile navigation">
+    <button class="active" data-route="home"><span>⌂</span><b>Home</b></button>
+    <button data-route="games"><span>▦</span><b>Games</b></button>
+    <button data-route="parties"><span>◉</span><b>Parties</b></button>
+    <button data-route="messages"><span>✦</span><b>Messages</b></button>
+    <button data-route="community"><span>◎</span><b>Social</b></button>
+  </nav>
+
+  <div class="modal-backdrop" id="modal-backdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <button class="modal-close" id="modal-close">×</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+  <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+  <script src="./seed-data.js"></script>
+  <script src="./storage.js"></script>
+  <script src="./psn-importer.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
