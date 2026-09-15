@@ -1,5 +1,0 @@
-PORT=4173
-JWT_SECRET=replace-with-a-long-random-secret
-PSN_SYNC_MODE=psn-api
-PSN_AUTO_SYNC=true
-PSN_NPSSO=
