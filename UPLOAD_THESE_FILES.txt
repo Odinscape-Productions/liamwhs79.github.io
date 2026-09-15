@@ -1,0 +1,21 @@
+PULSESTATION V8 — SHARE PROFILE QR LINKING
+==========================================
+
+Replace the current GitHub Pages files with ALL files below:
+
+DEPLOY-GITHUB-PAGES.md
+README.md
+TRACKER-SOURCES.md
+UPLOAD_THESE_FILES.txt
+app.js
+icon.svg
+index.html
+manifest.webmanifest
+psn-importer.js
+seed-data.js
+service-worker.js
+storage.js
+styles.css
+
+Camera QR scanning uses the browser's built-in BarcodeDetector where supported.
+Paste Share Profile link and manual Online ID remain available everywhere.
